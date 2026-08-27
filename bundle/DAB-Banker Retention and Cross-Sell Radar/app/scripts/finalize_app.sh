@@ -48,7 +48,7 @@ cd "$BUNDLE_DIR"
 # here. The name matches databricks.yml's job name with the dev-mode prefix.
 # ⚠️ When forking this template for a new demo, change "LuxeBeauty Setup" to
 #    match the renamed job name in databricks.yml (resources.jobs.<key>.name).
-SETUP_JOB_NAME_MATCH="LuxeBeauty Setup"
+SETUP_JOB_NAME_MATCH="Meridian Retention Radar Setup"
 if [[ -z "$JOB_ID" ]]; then
     JOB_ID=$(databricks jobs list "${PROFILE_FLAG[@]}" -o json 2>/dev/null \
         | python3 -c "
@@ -59,7 +59,7 @@ hit = [j for j in jobs if '$SETUP_JOB_NAME_MATCH' in (j.get('settings',{}).get('
 print(hit[0]['job_id'] if hit else '')
 ")
 fi
-[[ -n "$JOB_ID" ]] || { echo "[finalize] ERROR: couldn't find the LuxeBeauty Setup job by name." >&2; exit 1; }
+[[ -n "$JOB_ID" ]] || { echo "[finalize] ERROR: couldn't find the '$SETUP_JOB_NAME_MATCH' job by name." >&2; exit 1; }
 echo "[finalize] setup job id: $JOB_ID"
 
 if [[ -z "$RUN_ID" ]]; then

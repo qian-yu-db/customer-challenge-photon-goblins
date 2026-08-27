@@ -79,12 +79,12 @@ sync:
 targets:
   dev:
     default: true
-    mode: development   # keeps dev behaviors (paused schedules, dev tag, pipelines_development).
-    presets:
-      name_prefix: ""   # ⚠️ Disable the `[dev <user>]` / `dev_<user>_` name prefixing so the
-                        # schema deploys with the EXACT name passed via --var schema. The SDP
-                        # silver read_files() paths are hardcoded, so the schema (and thus the
-                        # raw_data volume path) must be deterministic — see dab_instructions.md.
+    # No `mode: development`: development mode force-prefixes the schema with
+    # `dev_<user>_` (and `presets.name_prefix: ""` does NOT disable it — an empty
+    # prefix is treated as unset and falls back to the default). The SDP silver
+    # read_files() paths are hardcoded, so the schema — and thus the raw_data volume
+    # path — must be exactly `${var.schema}`. Literal names give us that.
+    # Pipelines still run in development mode via the pipeline's own config below.
   prod:
     mode: production
 

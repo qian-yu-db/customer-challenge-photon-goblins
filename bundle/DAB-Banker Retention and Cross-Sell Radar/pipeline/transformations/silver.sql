@@ -7,13 +7,13 @@ AS SELECT
   customer_id, first_name, last_name, email, ssn_masked, segment,
   home_branch, branch_region, CAST(registration_date AS DATE) AS registration_date,
   tenure_months, relationship_value_usd, rm_name
-FROM read_files('/Volumes/solution_builder/demo_banker_retention_cross_sell_radar/raw_data/customers', format => 'parquet');
+FROM read_files('/Volumes/vijay_catalog/banker_retention_cross_sell/raw_data/customers', format => 'parquet');
 
 CREATE OR REFRESH MATERIALIZED VIEW silver_accounts AS
 SELECT a.account_id, a.customer_id, a.account_type, a.balance_usd,
        CAST(a.open_date AS DATE) AS open_date, a.status,
        c.segment, c.home_branch, c.branch_region
-FROM read_files('/Volumes/solution_builder/demo_banker_retention_cross_sell_radar/raw_data/accounts', format => 'parquet') a
+FROM read_files('/Volumes/vijay_catalog/banker_retention_cross_sell/raw_data/accounts', format => 'parquet') a
 JOIN silver_customers c USING (customer_id);
 
 CREATE OR REFRESH MATERIALIZED VIEW silver_transactions
@@ -22,7 +22,7 @@ AS SELECT t.transaction_id, t.customer_id, t.account_id,
        CAST(t.txn_date AS TIMESTAMP) AS txn_date,
        t.amount_usd, t.txn_type, t.channel,
        c.segment, c.home_branch
-FROM read_files('/Volumes/solution_builder/demo_banker_retention_cross_sell_radar/raw_data/transactions', format => 'parquet') t
+FROM read_files('/Volumes/vijay_catalog/banker_retention_cross_sell/raw_data/transactions', format => 'parquet') t
 JOIN silver_customers c USING (customer_id);
 
 -- Customer-grain weekly deposit balance (sum of positive deposit-account balances).
@@ -30,7 +30,7 @@ CREATE OR REFRESH MATERIALIZED VIEW _cust_weekly_balance AS
 SELECT b.customer_id, CAST(b.week_start AS DATE) AS week_start,
        SUM(CASE WHEN a.account_type IN ('Checking','Savings','High-Yield Savings')
                 THEN b.balance_usd ELSE 0 END) AS deposit_balance_usd
-FROM read_files('/Volumes/solution_builder/demo_banker_retention_cross_sell_radar/raw_data/balance_weekly', format => 'parquet') b
+FROM read_files('/Volumes/vijay_catalog/banker_retention_cross_sell/raw_data/balance_weekly', format => 'parquet') b
 JOIN silver_accounts a USING (account_id)
 GROUP BY b.customer_id, CAST(b.week_start AS DATE);
 

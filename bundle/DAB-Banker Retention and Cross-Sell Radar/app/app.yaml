@@ -30,17 +30,26 @@ user_authorization:
 
 env:
   - name: NODE_ENV
-    value: production
-
-  # ── Binding-derived ─────────────────────────────────────────────────
-  # AppKit's ResourceRegistry expects DATABRICKS_WAREHOUSE_ID and the
-  # standard PG* vars from the postgres binding (PGHOST/PGDATABASE/PGUSER
-  # /PGPORT/PGSSLMODE are auto-injected by the platform).
+    value: "production"
   - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: WAREHOUSE_ID
     valueFrom: sql-warehouse
   - name: LAKEBASE_ENDPOINT
     valueFrom: postgres
-  # Mirror DATABRICKS_WAREHOUSE_ID into WAREHOUSE_ID for config/app.json
-  # placeholder resolution.
-  - name: WAREHOUSE_ID
-    valueFrom: sql-warehouse
+  - name: DEMO_CATALOG
+    value: "vijay_catalog"
+  - name: DEMO_SCHEMA
+    value: "banker_retention_cross_sell"
+  - name: DASHBOARD_ID
+    value: "01f1a254cd2f1144b6d2e1f105431e2d"
+  - name: PIPELINE_ID
+    value: "bca0a467-3418-4a95-894b-93496673db82"
+  - name: AGENT_MLFLOW_EXPERIMENT_PATH
+    value: "/Shared/solution_builder/dbgen-meridian-radar-agent-traces"
+  - name: GENIE_SPACE_ID
+    value: "01f1a25bc3481bd78367ba5c93c7a886"
+  - name: KA_ENDPOINT_NAME
+    value: ""
+  - name: MAS_ENDPOINT_NAME
+    value: ""
