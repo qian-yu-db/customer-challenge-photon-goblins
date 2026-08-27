@@ -1,0 +1,35 @@
+{
+  "capabilities": {
+    "buildable": [
+      "synthetic-data-gen",
+      "sdp",
+      "metric-views",
+      "aibi-dashboards",
+      "lakebase",
+      "databricks-apps"
+    ],
+    "talking_track": [
+      "lakeflow-connect",
+      "unity-catalog",
+      "ai-gateway",
+      "genie-one",
+      "genie-code"
+    ]
+  },
+  "created_resources": {
+    "catalog": "solution_builder",
+    "schema": "demo_banker_retention_cross_sell_radar",
+    "warehouse_id": "a94beda3aab06fa4",
+    "pipeline_id": "ca218944-aa87-41c6-a430-02b65b85db2a",
+    "metric_view_name": "solution_builder.demo_banker_retention_cross_sell_radar.mv_book_health",
+    "genie_space_id": "01f1a246957b1a97858dc84850105841",
+    "dashboard_id": "01f1a246fd701523b52838bb9e4cc54f",
+    "app": {
+      "name": "dbgen-meridian-radar",
+      "deployment_note": "Built + smoke-tested (type-check clean, endpoints return real rows). Not deployed — deploy on explicit request via app.md Step 6."
+    },
+    "lakebase_project_id": "2ab8ad6f-0376-442a-bf52-cc74907201cf",
+    "lakebase_project_slug": "dbdemos-asset-generator",
+    "lakebase_database": "dbgen_meridian_radar"
+  }
+}

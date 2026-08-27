@@ -1,0 +1,69 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {"id": "10000000000000000000000000000001", "question": ["What's our at-risk relationship value this week, and how does it compare to a month ago?"]},
+      {"id": "10000000000000000000000000000002", "question": ["Which segments and branches have the most at-risk customers?"]},
+      {"id": "10000000000000000000000000000003", "question": ["Show me the highest-risk customers and why they're drifting."]},
+      {"id": "10000000000000000000000000000004", "question": ["How many high-risk customers had their payroll stop?"]},
+      {"id": "10000000000000000000000000000005", "question": ["Who is ready for a next-best-action offer, and what's it worth?"]},
+      {"id": "10000000000000000000000000000006", "question": ["What's the total cross-sell opportunity by segment?"]}
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {"identifier": "solution_builder.demo_banker_retention_cross_sell_radar.gold_customer_360"},
+      {"identifier": "solution_builder.demo_banker_retention_cross_sell_radar.gold_rm_radar"},
+      {"identifier": "solution_builder.demo_banker_retention_cross_sell_radar.mv_book_health"}
+    ]
+  },
+  "instructions": {
+    "example_question_sqls": [
+      {
+        "id": "20000000000000000000000000000001",
+        "question": ["What's our at-risk relationship value this week, and how does it compare to a month ago?"],
+        "sql": ["SELECT `week_start`, ROUND(MEASURE(`at_risk_balance`)) AS at_risk_value, ROUND(MEASURE(`attrition_risk_rate`), 4) AS risk_rate\n", "FROM solution_builder.demo_banker_retention_cross_sell_radar.mv_book_health\n", "GROUP BY `week_start` ORDER BY `week_start` DESC LIMIT 6"]
+      },
+      {
+        "id": "20000000000000000000000000000002",
+        "question": ["Which segments and branches have the most at-risk customers?"],
+        "sql": ["SELECT `segment`, `home_branch`, MEASURE(`at_risk_customers`) AS at_risk_customers\n", "FROM solution_builder.demo_banker_retention_cross_sell_radar.mv_book_health\n", "GROUP BY `segment`, `home_branch` ORDER BY at_risk_customers DESC LIMIT 15"]
+      },
+      {
+        "id": "20000000000000000000000000000003",
+        "question": ["Show me the highest-risk customers and why they're drifting."],
+        "sql": ["SELECT customer_id, first_name, last_name, segment, home_branch, attrition_risk_score, balance_runoff_pct, days_since_last_payroll, nba_reason\n", "FROM solution_builder.demo_banker_retention_cross_sell_radar.gold_customer_360\n", "WHERE risk_band = 'High' ORDER BY attrition_risk_score DESC LIMIT 25"]
+      },
+      {
+        "id": "20000000000000000000000000000004",
+        "question": ["How many high-risk customers had their payroll stop?"],
+        "sql": ["SELECT COUNT(*) AS payroll_interrupted_high_risk\n", "FROM solution_builder.demo_banker_retention_cross_sell_radar.gold_customer_360\n", "WHERE risk_band = 'High' AND payroll_interrupted = TRUE"]
+      },
+      {
+        "id": "20000000000000000000000000000005",
+        "question": ["Who is ready for a next-best-action offer, and what's it worth?"],
+        "sql": ["SELECT nba_product, COUNT(*) AS ready_customers, ROUND(SUM(cross_sell_opportunity_usd)) AS opportunity_usd\n", "FROM solution_builder.demo_banker_retention_cross_sell_radar.gold_customer_360\n", "WHERE cross_sell_eligible = TRUE GROUP BY nba_product ORDER BY opportunity_usd DESC"]
+      },
+      {
+        "id": "20000000000000000000000000000006",
+        "question": ["What's the total cross-sell opportunity by segment?"],
+        "sql": ["SELECT `segment`, ROUND(MEASURE(`cross_sell_opportunity`)) AS opportunity_usd\n", "FROM solution_builder.demo_banker_retention_cross_sell_radar.mv_book_health\n", "GROUP BY `segment` ORDER BY opportunity_usd DESC"]
+      }
+    ],
+    "text_instructions": [
+      {
+        "id": "30000000000000000000000000000001",
+        "content": [
+          "WHAT'S HAPPENING: Meridian Bank loses ~12%/yr of customers to attrition and leaves ~$15M/yr of cross-sell revenue unoffered. A cohort of ~300 mostly-Affluent customers (concentrated in the Harbor, Bayview and Highland branches) went quiet ~3 weeks ago: their direct deposits/payroll stopped ~5 weeks ago and their balances have drained 55-90%. This is the classic pre-attrition signature. Separately, ~1,500 healthy customers clearly qualify for a next-best-action product they don't yet hold (~$3-4M/yr).\n",
+          "WHO IT'S FOR: Yusuf Demirel (EVP Consumer & Small Business Banking) and his relationship managers. Answer in plain business language.\n",
+          "BASELINES: annual attrition ~12%; average relationship value ~$500/yr. A 'High' risk band = attrition_risk_score >= 0.6.\n",
+          "HEADLINE NUMBERS — always answer from mv_book_health via MEASURE(): at-risk relationship value = MEASURE(`at_risk_balance`), at-risk customers = MEASURE(`at_risk_customers`), attrition risk rate = MEASURE(`attrition_risk_rate`), cross-sell opportunity = MEASURE(`cross_sell_opportunity`). These match the dashboard KPI tiles exactly. Never wrap MEASURE() in another aggregate.\n",
+          "WHICH ACCOUNTS ARE DRIFTING: use gold_customer_360 WHERE risk_band='High' — expose payroll_interrupted, balance_runoff_pct, segment, home_branch. Expect Affluent + Harbor/Bayview/Highland concentration.\n",
+          "WHY A RECOMMENDATION IS MADE: read the nba_reason column on gold_customer_360 / gold_rm_radar — it states the signal (payroll stopped N days ago, balance down X%) or the cross-sell rationale (deposits on hand, product not held).\n",
+          "WHO IS READY FOR AN OFFER: gold_customer_360 WHERE cross_sell_eligible = TRUE — group by nba_product, sum cross_sell_opportunity_usd (~$3-4M total).\n",
+          "gold_rm_radar is the actionable queue (retention + cross_sell rows only) with a priority and status."
+        ]
+      }
+    ]
+  }
+}

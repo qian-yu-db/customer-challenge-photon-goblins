@@ -1,0 +1,73 @@
+{
+  // App config (JSONC). Loaded by server/server.ts loadAppConfig.
+  //
+  // ${VAR} / ${VAR:default} placeholders are substituted against process.env
+  // BEFORE JSON parsing. So catalog/schema/resource-IDs live in env (one
+  // source of truth), NOT as literals here — set them in `.env` (local dev +
+  // preview) or via the DAB (deployed; finalize_app.sh writes app.yaml's env).
+  //   - `${VAR}`           → empty string if unset
+  //   - `${VAR:default}`   → `default` if unset
+  //
+  // CUSTOMIZE per demo: branding, assistantScript, and data.tables names.
+
+  // ─ Agent data backend. This is a GENIE-BACKED, single-agent demo (no MAS).
+  //   The agent registers `ask_genie` against GENIE_SPACE_ID. masEndpointName
+  //   stays empty. See server/agent/retentionops.ts makeTools.
+  "masEndpointName": "${MAS_ENDPOINT_NAME:}",
+  "genieSpaceId":    "${GENIE_SPACE_ID:01f1a246957b1a97858dc84850105841}",
+
+  // Agent LLM. Needs the Responses API (openai/v1/responses). databricks-gpt-5-4
+  // is the baseline. Non-Responses models (Claude etc.) 400 BAD_REQUEST.
+  "agentModel": "databricks-gpt-5-4",
+
+  // MLflow trace path. Empty → chat shows "Trace pending…". Auto-created at boot.
+  "mlflowExperimentId": "",
+  "agentMlflowExperimentPath": "${AGENT_MLFLOW_EXPERIMENT_PATH:}",
+
+  // Embedded AI/BI dashboard (UUID). Backfilled by the parent after this build.
+  "dashboardId": "${DASHBOARD_ID:01f1a246fd701523b52838bb9e4cc54f}",
+
+  // Workspace resource IDs → deep-link URLs via /api/resources (PlatformDiagram
+  // on /platform). Empty id → tile renders inert.
+  "pipelineId":        "${PIPELINE_ID:}",
+  "warehouseId":       "${WAREHOUSE_ID:}",
+  "kaEndpointName":    "${KA_ENDPOINT_NAME:}",
+  "lakebaseProjectId": "${LAKEBASE_PROJECT_ID:}",
+  "appUrl":            "${APP_URL:}",
+
+  // Delta source for boot-time Lakebase mirror (server/db/sync.ts). catalog +
+  // schema come from env; the table NAMES are the demo's gold/silver tables
+  // (keep client/src/shared/types.ts + Drizzle schema in server/db/schema.ts
+  // in sync).
+  "data": {
+    "catalog": "${DEMO_CATALOG:solution_builder}",
+    "schema":  "${DEMO_SCHEMA:demo_banker_retention_cross_sell_radar}",
+    "tables": {
+      "radar":         "gold_rm_radar",
+      "balanceWeekly": "silver_balance_weekly",
+      "transactions":  "silver_transactions"
+    }
+  },
+
+  // Surfaces in dock header + page titles.
+  "branding": {
+    "appName": "Meridian Retention & Cross-Sell Radar"
+  },
+
+  // Dock's "Suggested next" chip walks this list. Step N unlocks once the
+  // previous assistant message contains any triggerAfter[] substring.
+  // Picker: client/src/chat/script.ts.
+  "assistantScript": [
+    {
+      "prompt": "Which accounts are drifting, and why?"
+    },
+    {
+      "prompt": "Draft retention offers for the drifting Harbor customers, and cross-sell offers for who's ready. Show me both before I confirm.",
+      "triggerAfter": ["drift", "cohort", "customers", "payroll", "harbor"]
+    },
+    {
+      "prompt": "Yes — confirm the actions.",
+      "triggerAfter": ["draft", "offer", "confirm", "retention", "cross-sell"]
+    }
+  ]
+}

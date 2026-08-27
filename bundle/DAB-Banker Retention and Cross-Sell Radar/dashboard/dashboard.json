@@ -1,0 +1,333 @@
+{
+  "datasets": [
+    {
+      "name": "ds_book",
+      "displayName": "Book health (metric view)",
+      "queryLines": [
+        "SELECT week_start, segment, home_branch, ",
+        "MEASURE(`at_risk_balance`) AS at_risk_balance, ",
+        "MEASURE(`at_risk_customers`) AS at_risk_customers, ",
+        "MEASURE(`total_relationship_value`) AS relationship_value, ",
+        "MEASURE(`cross_sell_opportunity`) AS cross_sell_opportunity, ",
+        "MEASURE(`book_customers`) AS book_customers, ",
+        "MEASURE(`attrition_risk_rate`) AS attrition_risk_rate ",
+        "FROM mv_book_health GROUP BY ALL"
+      ]
+    },
+    {
+      "name": "ds_customers",
+      "displayName": "Customer 360",
+      "queryLines": [
+        "SELECT customer_id, segment, home_branch, branch_region, risk_band, ",
+        "attrition_risk_score, balance_runoff_pct, payroll_interrupted, days_since_last_payroll, ",
+        "products_held, total_balance_usd, cross_sell_eligible, nba_type, nba_product, ",
+        "cross_sell_opportunity_usd, relationship_value_usd ",
+        "FROM gold_customer_360"
+      ]
+    },
+    {
+      "name": "ds_radar",
+      "displayName": "RM Radar queue",
+      "queryLines": [
+        "SELECT customer_id, first_name, last_name, segment, home_branch, rm_name, risk_band, ",
+        "attrition_risk_score, nba_type, nba_product, nba_reason, cross_sell_opportunity_usd, ",
+        "relationship_value_usd, priority ",
+        "FROM gold_rm_radar"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "retention",
+      "displayName": "Retention",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "hdr_retention",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Meridian Bank — Retention Radar\n",
+                "**Yusuf Demirel, EVP Consumer & Small Business Banking.** A cohort of Affluent customers went quiet ~3 weeks ago — direct deposits stopped and balances are draining. This page tracks at-risk relationship value, where it's concentrated (Harbor / Bayview / Highland), and who's drifting. The scatter separates the drifting cohort (orange, top-right) from the healthy book."
+              ]
+            }
+          },
+          "position": {"x": 0, "y": 0, "width": 12, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_at_risk_value",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_book", "fields": [{"name": "sum(at_risk_balance)", "expression": "SUM(`at_risk_balance`)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "sum(at_risk_balance)", "displayName": "At-Risk Relationship Value", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}}}, "frame": {"title": "At-Risk Relationship Value", "showTitle": true}}
+          },
+          "position": {"x": 0, "y": 3, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_at_risk_customers",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_book", "fields": [{"name": "sum(at_risk_customers)", "expression": "SUM(`at_risk_customers`)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "sum(at_risk_customers)", "displayName": "At-Risk Customers", "format": {"type": "number", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 0}}}}, "frame": {"title": "At-Risk Customer-Weeks", "showTitle": true}}
+          },
+          "position": {"x": 3, "y": 3, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_risk_rate",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_book", "fields": [{"name": "max(attrition_risk_rate)", "expression": "MAX(`attrition_risk_rate`)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "max(attrition_risk_rate)", "displayName": "Peak Weekly Risk Rate", "format": {"type": "number-percent", "decimalPlaces": {"type": "max", "places": 2}}}}, "frame": {"title": "Peak Weekly At-Risk Rate", "showTitle": true}}
+          },
+          "position": {"x": 6, "y": 3, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_cross_sell",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_book", "fields": [{"name": "sum(cross_sell_opportunity)", "expression": "SUM(`cross_sell_opportunity`)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "sum(cross_sell_opportunity)", "displayName": "Cross-Sell Opportunity", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}}}, "frame": {"title": "Cross-Sell Opportunity (annual)", "showTitle": true}}
+          },
+          "position": {"x": 9, "y": 3, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "trend_at_risk",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_book", "fields": [{"name": "weekly(week_start)", "expression": "DATE_TRUNC(\"WEEK\", `week_start`)"}, {"name": "sum(at_risk_balance)", "expression": "SUM(`at_risk_balance`)"}], "disaggregated": false, "orders": [{"direction": "ASC", "expression": "DATE_TRUNC(\"WEEK\", `week_start`)"}]}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {"fieldName": "weekly(week_start)", "scale": {"type": "temporal"}, "displayName": "Week"},
+                "y": {"fieldName": "sum(at_risk_balance)", "scale": {"type": "quantitative"}, "displayName": "At-Risk Relationship Value", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact"}},
+                "color": {"value": {"hex": "#E8590C"}}
+              },
+              "annotations": [{"type": "vertical-line", "encodings": {"x": {"dataValue": "2026-07-20T00:00:00.000", "dataType": "DATETIME"}, "label": {"value": "Payroll credits stop"}, "color": {"value": {"hex": "#F2B705"}}}}],
+              "frame": {"showTitle": true, "title": "Weekly at-risk relationship value — the drift began ~6 weeks ago", "showDescription": true, "description": "Flat baseline → payroll stops → balances drain → at-risk value builds to a peak ~3 weeks ago, then decays as some customers recover."}
+            }
+          },
+          "position": {"x": 0, "y": 6, "width": 12, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "at_risk_by_branch",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_book", "fields": [{"name": "home_branch", "expression": "`home_branch`"}, {"name": "segment", "expression": "`segment`"}, {"name": "sum(at_risk_customers)", "expression": "SUM(`at_risk_customers`)"}], "disaggregated": false}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {"fieldName": "home_branch", "scale": {"type": "categorical"}, "displayName": "Branch"},
+                "y": {"fieldName": "sum(at_risk_customers)", "scale": {"type": "quantitative"}, "displayName": "At-Risk Customer-Weeks"},
+                "color": {"fieldName": "segment", "scale": {"type": "categorical", "mappings": [{"value": "Affluent", "color": "#0A2E5C"}, {"value": "Mass Market", "color": "#1B6CA8"}, {"value": "Small Business", "color": "#5AB4E6"}]}, "displayName": "Segment"}
+              },
+              "frame": {"showTitle": true, "title": "At-risk customers by branch — Harbor / Bayview / Highland lead"}
+            }
+          },
+          "position": {"x": 0, "y": 12, "width": 6, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "at_risk_by_segment",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_book", "fields": [{"name": "segment", "expression": "`segment`"}, {"name": "sum(at_risk_balance)", "expression": "SUM(`at_risk_balance`)"}], "disaggregated": false, "orders": [{"direction": "DESC", "expression": "SUM(`at_risk_balance`)"}]}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "y": {"fieldName": "segment", "scale": {"type": "categorical"}, "displayName": "Segment"},
+                "x": {"fieldName": "sum(at_risk_balance)", "scale": {"type": "quantitative"}, "displayName": "At-Risk Relationship Value", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact"}},
+                "color": {"fieldName": "segment", "scale": {"type": "categorical", "mappings": [{"value": "Affluent", "color": "#0A2E5C"}, {"value": "Mass Market", "color": "#1B6CA8"}, {"value": "Small Business", "color": "#5AB4E6"}]}, "displayName": "Segment"}
+              },
+              "frame": {"showTitle": true, "title": "At-risk relationship value by segment — Affluent dominates"}
+            }
+          },
+          "position": {"x": 6, "y": 12, "width": 6, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "runoff_scatter",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_customers", "fields": [{"name": "balance_runoff_pct", "expression": "`balance_runoff_pct`"}, {"name": "attrition_risk_score", "expression": "`attrition_risk_score`"}, {"name": "risk_band", "expression": "`risk_band`"}, {"name": "customer_id", "expression": "`customer_id`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {"fieldName": "balance_runoff_pct", "scale": {"type": "quantitative"}, "displayName": "Balance runoff %"},
+                "y": {"fieldName": "attrition_risk_score", "scale": {"type": "quantitative"}, "displayName": "Attrition risk score"},
+                "color": {"fieldName": "risk_band", "scale": {"type": "categorical", "mappings": [{"value": "High", "color": "#E8590C"}, {"value": "Medium", "color": "#F2B705"}, {"value": "Low", "color": "#1B6CA8"}]}, "displayName": "Risk band"}
+              },
+              "frame": {"showTitle": true, "title": "Balance runoff vs risk score — the drifting cohort", "showDescription": true, "description": "A dense orange cluster (high runoff + high risk) sits apart from the healthy blue book."}
+            }
+          },
+          "position": {"x": 0, "y": 17, "width": 12, "height": 6}
+        }
+      ]
+    },
+    {
+      "name": "cross_sell",
+      "displayName": "Cross-Sell",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "hdr_cross_sell",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Cross-Sell Radar — who's ready for a next-best-action offer\n",
+                "**~$3–4M/yr of product-holding revenue is on the table** because relationship managers work from overnight extracts. This page ranks the opportunity by next-best product, segment, and branch — and lists the actionable book with the reason for each recommendation."
+              ]
+            }
+          },
+          "position": {"x": 0, "y": 0, "width": 12, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_ready_customers",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_customers", "fields": [{"name": "sum(cross_sell_flag)", "expression": "SUM(CASE WHEN `cross_sell_eligible` THEN 1 ELSE 0 END)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "sum(cross_sell_flag)", "displayName": "Ready Customers", "format": {"type": "number", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 0}}}}, "frame": {"title": "Cross-Sell-Ready Customers", "showTitle": true}}
+          },
+          "position": {"x": 0, "y": 3, "width": 4, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_total_opp",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_customers", "fields": [{"name": "sum(cross_sell_opportunity_usd)", "expression": "SUM(`cross_sell_opportunity_usd`)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "sum(cross_sell_opportunity_usd)", "displayName": "Total Opportunity", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}}}, "frame": {"title": "Total Cross-Sell Opportunity (annual)", "showTitle": true}}
+          },
+          "position": {"x": 4, "y": 3, "width": 4, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_avg_opp",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_customers", "fields": [{"name": "avg_opp", "expression": "SUM(`cross_sell_opportunity_usd`) / SUM(CASE WHEN `cross_sell_eligible` THEN 1 ELSE 0 END)"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "counter", "encodings": {"value": {"fieldName": "avg_opp", "displayName": "Avg Opportunity / Customer", "format": {"type": "number-currency", "currencyCode": "USD", "decimalPlaces": {"type": "max", "places": 0}}}}, "frame": {"title": "Avg Opportunity / Ready Customer", "showTitle": true}}
+          },
+          "position": {"x": 8, "y": 3, "width": 4, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "opp_by_product",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_customers", "fields": [{"name": "nba_product", "expression": "`nba_product`"}, {"name": "sum(cross_sell_opportunity_usd)", "expression": "SUM(`cross_sell_opportunity_usd`)"}], "disaggregated": false, "orders": [{"direction": "DESC", "expression": "SUM(`cross_sell_opportunity_usd`)"}]}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "y": {"fieldName": "nba_product", "scale": {"type": "categorical"}, "displayName": "Next-best product"},
+                "x": {"fieldName": "sum(cross_sell_opportunity_usd)", "scale": {"type": "quantitative"}, "displayName": "Opportunity", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact"}},
+                "color": {"value": {"hex": "#1B6CA8"}}
+              },
+              "frame": {"showTitle": true, "title": "Cross-sell opportunity by next-best product"}
+            }
+          },
+          "position": {"x": 0, "y": 6, "width": 6, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "ready_by_branch",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_customers", "fields": [{"name": "home_branch", "expression": "`home_branch`"}, {"name": "segment", "expression": "`segment`"}, {"name": "count(customer_id)", "expression": "COUNT(`customer_id`)"}], "disaggregated": false}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {"fieldName": "home_branch", "scale": {"type": "categorical"}, "displayName": "Branch"},
+                "y": {"fieldName": "count(customer_id)", "scale": {"type": "quantitative"}, "displayName": "Ready customers"},
+                "color": {"fieldName": "segment", "scale": {"type": "categorical", "mappings": [{"value": "Affluent", "color": "#0A2E5C"}, {"value": "Mass Market", "color": "#1B6CA8"}, {"value": "Small Business", "color": "#5AB4E6"}]}, "displayName": "Segment"}
+              },
+              "frame": {"showTitle": true, "title": "Ready customers by branch"}
+            }
+          },
+          "position": {"x": 6, "y": 6, "width": 6, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "radar_table",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_radar", "fields": [{"name": "first_name", "expression": "`first_name`"}, {"name": "last_name", "expression": "`last_name`"}, {"name": "segment", "expression": "`segment`"}, {"name": "home_branch", "expression": "`home_branch`"}, {"name": "rm_name", "expression": "`rm_name`"}, {"name": "risk_band", "expression": "`risk_band`"}, {"name": "nba_type", "expression": "`nba_type`"}, {"name": "nba_product", "expression": "`nba_product`"}, {"name": "cross_sell_opportunity_usd", "expression": "`cross_sell_opportunity_usd`"}, {"name": "nba_reason", "expression": "`nba_reason`"}], "disaggregated": true}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {"fieldName": "first_name", "displayName": "First"},
+                  {"fieldName": "last_name", "displayName": "Last"},
+                  {"fieldName": "segment", "displayName": "Segment"},
+                  {"fieldName": "home_branch", "displayName": "Branch"},
+                  {"fieldName": "rm_name", "displayName": "RM"},
+                  {"fieldName": "risk_band", "displayName": "Risk", "style": {"type": "basic", "rules": [{"condition": {"operand": {"type": "data-value", "value": "High"}, "operator": "="}, "backgroundColor": {"hex": "#E8590C"}}, {"condition": {"operand": {"type": "data-value", "value": "Medium"}, "operator": "="}, "backgroundColor": {"hex": "#F2B705"}}]}},
+                  {"fieldName": "nba_type", "displayName": "NBA"},
+                  {"fieldName": "nba_product", "displayName": "Product"},
+                  {"fieldName": "cross_sell_opportunity_usd", "displayName": "Cross-Sell $", "format": {"type": "number-currency", "currencyCode": "USD", "decimalPlaces": {"type": "exact", "places": 0}}},
+                  {"fieldName": "nba_reason", "displayName": "Why"}
+                ]
+              },
+              "frame": {"showTitle": true, "title": "RM Radar — next best actions"}
+            }
+          },
+          "position": {"x": 0, "y": 12, "width": 12, "height": 8}
+        }
+      ]
+    },
+    {
+      "name": "filters",
+      "displayName": "Filters",
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "filter_week",
+            "queries": [{"name": "f_week", "query": {"datasetName": "ds_book", "fields": [{"name": "week_start", "expression": "`week_start`"}], "disaggregated": false}}],
+            "spec": {"version": 2, "widgetType": "filter-date-range-picker", "encodings": {"fields": [{"fieldName": "week_start", "queryName": "f_week"}]}, "frame": {"showTitle": true, "title": "Week"}}
+          },
+          "position": {"x": 0, "y": 0, "width": 3, "height": 2}
+        },
+        {
+          "widget": {
+            "name": "filter_segment",
+            "queries": [
+              {"name": "f_seg_book", "query": {"datasetName": "ds_book", "fields": [{"name": "segment", "expression": "`segment`"}], "disaggregated": false}},
+              {"name": "f_seg_cust", "query": {"datasetName": "ds_customers", "fields": [{"name": "segment", "expression": "`segment`"}], "disaggregated": false}},
+              {"name": "f_seg_radar", "query": {"datasetName": "ds_radar", "fields": [{"name": "segment", "expression": "`segment`"}], "disaggregated": false}}
+            ],
+            "spec": {"version": 2, "widgetType": "filter-multi-select", "encodings": {"fields": [{"fieldName": "segment", "queryName": "f_seg_book"}, {"fieldName": "segment", "queryName": "f_seg_cust"}, {"fieldName": "segment", "queryName": "f_seg_radar"}]}, "frame": {"showTitle": true, "title": "Segment"}}
+          },
+          "position": {"x": 3, "y": 0, "width": 3, "height": 2}
+        },
+        {
+          "widget": {
+            "name": "filter_branch",
+            "queries": [
+              {"name": "f_br_book", "query": {"datasetName": "ds_book", "fields": [{"name": "home_branch", "expression": "`home_branch`"}], "disaggregated": false}},
+              {"name": "f_br_cust", "query": {"datasetName": "ds_customers", "fields": [{"name": "home_branch", "expression": "`home_branch`"}], "disaggregated": false}},
+              {"name": "f_br_radar", "query": {"datasetName": "ds_radar", "fields": [{"name": "home_branch", "expression": "`home_branch`"}], "disaggregated": false}}
+            ],
+            "spec": {"version": 2, "widgetType": "filter-multi-select", "encodings": {"fields": [{"fieldName": "home_branch", "queryName": "f_br_book"}, {"fieldName": "home_branch", "queryName": "f_br_cust"}, {"fieldName": "home_branch", "queryName": "f_br_radar"}]}, "frame": {"showTitle": true, "title": "Branch"}}
+          },
+          "position": {"x": 6, "y": 0, "width": 3, "height": 2}
+        },
+        {
+          "widget": {
+            "name": "filter_risk",
+            "queries": [
+              {"name": "f_rk_cust", "query": {"datasetName": "ds_customers", "fields": [{"name": "risk_band", "expression": "`risk_band`"}], "disaggregated": false}},
+              {"name": "f_rk_radar", "query": {"datasetName": "ds_radar", "fields": [{"name": "risk_band", "expression": "`risk_band`"}], "disaggregated": false}}
+            ],
+            "spec": {"version": 2, "widgetType": "filter-multi-select", "encodings": {"fields": [{"fieldName": "risk_band", "queryName": "f_rk_cust"}, {"fieldName": "risk_band", "queryName": "f_rk_radar"}]}, "frame": {"showTitle": true, "title": "Risk band"}}
+          },
+          "position": {"x": 9, "y": 0, "width": 3, "height": 2}
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {"light": "#F5F7FB", "dark": "#0F1419"},
+      "widgetBackgroundColor": {"light": "#FFFFFF", "dark": "#161B22"},
+      "widgetBorderColor": {"light": "#FFFFFF", "dark": "#161B22"},
+      "fontColor": {"light": "#1F2530", "dark": "#E8ECF0"},
+      "selectionColor": {"light": "#1B4D8F", "dark": "#7FB3F0"},
+      "visualizationColors": ["#0A2E5C", "#1B6CA8", "#5AB4E6", "#F2B705", "#E8590C"],
+      "widgetHeaderAlignment": "LEFT"
+    },
+    "genieSpace": {
+      "isEnabled": true,
+      "overrideId": "01f1a246957b1a97858dc84850105841",
+      "enablementMode": "ENABLED"
+    }
+  }
+}
