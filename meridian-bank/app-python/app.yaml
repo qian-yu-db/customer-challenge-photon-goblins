@@ -1,0 +1,30 @@
+command: ['python', 'app.py']
+
+user_authorization:
+  scopes:
+    - model-serving
+    - genie
+    - sql
+    - postgres
+    - ai-gateway
+    - catalog.catalogs:read
+    - catalog.schemas:read
+    - catalog.tables:read
+
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: LAKEBASE_ENDPOINT
+    valueFrom: database
+  - name: GENIE_SPACE_ID
+    value: '01f1a24d557e16ee8a69764562953277'
+  - name: DASHBOARD_ID
+    value: '01f1a246241d1d8598717cac385f6305'
+  - name: PIPELINE_ID
+    value: '27c8601a-6665-439d-aee1-9affc3f25110'
+  - name: LAKEBASE_PROJECT_ID
+    value: 'meridian-bank'
+  - name: DEMO_CATALOG
+    value: 'vijay_catalog'
+  - name: DEMO_SCHEMA
+    value: 'customer_challenge'

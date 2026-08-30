@@ -1,0 +1,8 @@
+{
+  "catalog": "vijay_catalog",
+  "schema": "customer_challenge",
+  "pipeline_id": "27c8601a-6665-439d-aee1-9affc3f25110",
+  "metric_view_name": "mv_customer_risk",
+  "dashboard_id": "01f1a246241d1d8598717cac385f6305",
+  "genie_space_id": "01f1a24d557e16ee8a69764562953277"
+}
